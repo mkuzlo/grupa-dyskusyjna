@@ -6,7 +6,7 @@
  * @return boolean
  */
 function __autoload($class_name) {
-    $folderList = array("application", "model");
+    $folderList = array("application", "model", "controller", "views");
     $filename = $class_name . '.php';
     
     foreach($folderList as $folder){
