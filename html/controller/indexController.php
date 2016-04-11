@@ -1,5 +1,5 @@
 <?php
-class indexController extends BaseController {
+class indexController extends baseController {
     public function index() {   
         Template::getInstance()->show("index");
     }

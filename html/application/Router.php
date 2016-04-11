@@ -35,8 +35,14 @@ class Router {
         } else {
             $action = $this->action;
         }
-        //wywołaj akcje
-        $controller->$action();
+        //wywołaj akcje jezeli w URL zostaly przekazane dodatkowe argumenty
+        if(!empty($this->args)){
+            $controller->$action($this->args);
+        }
+        //wywołaj akcje zwykłą
+        else{
+            $controller->$action();
+        }
     }
 
     private function getController() {

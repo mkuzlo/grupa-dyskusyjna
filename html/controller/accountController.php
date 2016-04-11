@@ -9,7 +9,7 @@
 class accountController extends baseController {
 
     public function index() {
-        
+        Template::getInstance()->show("index");
     }
 
     public function logout() {
@@ -48,8 +48,14 @@ class accountController extends baseController {
             $db = Database::getInstance();
             $user = new Users();
             $user->setLogin($login);
-            $user->setPassword($login);
+            $user->setPassword($password);
             $error = "";
+            if(strlen($user->getLogin())>=30){
+                $error = "Login jest zbyt długi";
+            }
+            if(strlen($user->getPassword())>=40){
+                $error = "Hasło jest zbyt długie";
+            }
             if (empty($login) || empty($password) || empty($password2)) {
                 $error = "Nie wypełniono wszystkich wymaganych pól";
             }

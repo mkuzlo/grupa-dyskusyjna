@@ -52,7 +52,7 @@ if (empty($login)) {
             </div>      
             <div class="nav navbar-nav navbar-right">
                 <span style="color: whitesmoke;font-size: 18px">Zalogowany: <?= $_SESSION['login'] ?></span>             
-                <a class="btn btn-danger" style="margin: 10px;" href="/<?= APP_ROOT ?>/account/logout">Wyloguj</a> 
+                <a class="btn btn-danger" style="margin: 10px; margin-bottom: 5px;" href="/<?= APP_ROOT ?>/account/logout">Wyloguj</a> 
             </div>
         </div>
     </nav>
