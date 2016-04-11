@@ -26,6 +26,13 @@ div.line-separator{
     background: #ffffff;
     border-bottom:1px solid #ffffff;
 }
+div.line-separator2{
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height:2px;
+    background: #ffffff;
+    border-bottom:1px solid #ffffff;
+}
 
 a.sideLink {
     color: rgb(157, 157, 157);
