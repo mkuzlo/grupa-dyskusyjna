@@ -49,7 +49,7 @@ class Database {
 
     /**
      * Sprawdza czy uzytkownik o danym loginie i haśle istnieje w bazie danych
-     * @param type $user
+     * @param Users $user
      * @return boolean
      */
     public function isUserAndPasswordExist($user) {
@@ -66,7 +66,7 @@ class Database {
 
     /**
      * Sprawdza czy uzytkownik o danym loginie istnieje w bazie danych
-     * @param type $user
+     * @param Users $user
      * @return boolean
      */
     public function isUserExist($user) {
@@ -82,7 +82,7 @@ class Database {
 
     /**
      * Sprawdza czy grupa o takiej nazwie już istnieje
-     * @param type $group
+     * @param Groups $group
      * @return boolean
      */
     public function isGroupNameExist($group) {
@@ -98,7 +98,7 @@ class Database {
 
     /**
      * Dodaje nową grupę do bazy danych
-     * @param type $group
+     * @param Group $group
      * @return boolean
      */
     public function addGroup($group) {
@@ -117,8 +117,8 @@ class Database {
     }
 
     /**
-     * Wraz z tworzeniem nowej grupy użytkownij zostaje przypisany jak jej moderator
-     * @param type $group
+     * Wraz z tworzeniem nowej grupy użytkownik zostaje przypisany jak jej moderator
+     * @param Group $group
      * @return boolean
      */
     private function addModerator($group) {
@@ -137,8 +137,8 @@ class Database {
     }
 
     /**
-     * Zwraca grupę o podanej nazwie
-     * @param type $name
+     * Zwraca grupę o podanej nazwie lub FALSE gdy nie znaleziono
+     * @param String $name
      * @return \Groups|boolean
      */
     public function getGroupByName($name) {
@@ -159,8 +159,8 @@ class Database {
     }
     
     /**
-     * Zwraca grupe o podanym id
-     * @param type $id
+     * Zwraca grupe o podanym id lub FALSE gdy nie znaleziono
+     * @param int $id
      * @return \Groups|boolean
      */
     public function getGroupById($id) {
@@ -181,7 +181,7 @@ class Database {
     }
 
     /**
-     * Zwraca użytkownika akltualnie zalogowanego
+     * Zwraca użytkownika aktualnie zalogowanego
      * @return boolean|\Users
      */
     public function getUserBySessionLogin() {
@@ -324,6 +324,53 @@ class Database {
         else {
             return FALSE;
         }
+    }
+    
+    /**
+     * Zwraca użytkownika o podanym ID lub FALSE gdy nie znaleziono
+     * @param int $id
+     * @return boolean|\Users
+     */
+    public function getUserById($id){
+        $query = $this->PDO->prepare("SELECT * FROM USERS WHERE id=:id");
+        $query->bindValue(":id", $id);
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            $user = new Users();
+            $user->setId($result["id"]);
+            $user->setPassword($result["password"]);
+            $user->setLogin($result["login"]);
+            return $user;
+        }
+        return FALSE;
+    }
+    
+    /**
+     * Zwraca tablicę użytkowników należących do podanej grupy lub FALSE
+     * @param Groups $group
+     * @return boolean|\array of Users
+     */
+    public function getMembersOfGroup($group){
+        $query = $this->PDO->prepare("SELECT * FROM USER_GROUPS WHERE `GROUP` = :group AND (`role` = 'member' OR `role` = 'moderator')");
+        $query->bindValue(":group", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        $array = array();
+        if($affected_rows >= 1){
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            while($result != FALSE){ 
+                $user = $this->getUserById($result["user"]);              
+                $array[] = $user;
+                $result = $query->fetch(PDO::FETCH_ASSOC); 
+            }
+            return $array;
+        }
+        else{
+            return FALSE;
+        }
+                
     }
     
 }

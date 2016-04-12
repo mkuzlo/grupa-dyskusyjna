@@ -29,14 +29,9 @@ $router->setPath(__SITE_PATH . '/controller')
         <?php include 'html/includes/menu.php'; ?> 
         <div class="container">
             <div class="row">
-                <?php if( isset($_SESSION["login"])){ ?>
-                <div class="col-md-3">
-                    <?php include 'html/includes/sideBar.php'; ?> 
-                </div>
-                <?php }?>
-                <div class="col-md-9">
-                    <?php $router->loader(); ?>
-                </div>
+
+                <?php $router->loader(); ?>
+
             </div>
         </div>
         <!--Dołączenie skrytpu javascript biblioteki bootstrap -->

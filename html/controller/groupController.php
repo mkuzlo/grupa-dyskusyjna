@@ -40,7 +40,7 @@ class groupController extends baseController {
     }
 
     public function join($groupId) {
-        $message = "";
+        $error = "";
         if (isset($_SESSION["login"])) {
             $user = Database::getInstance()->getUserBySessionLogin();
             $group = Database::getInstance()->getGroupById($groupId[0]);
@@ -48,25 +48,25 @@ class groupController extends baseController {
                 $result = Database::getInstance()->addUserToGroup($user, $group);
                 if ($result) {
                     if ($group->getType() == "public") {
-                        $message = "Dołączyłeś do grupy " . $group->getName();
+                        $error = "Dołączyłeś do grupy " . $group->getName();
                     } else {
-                        $message = "Zapisałeś sie do grupy " . $group->getName()
+                        $error = "Zapisałeś sie do grupy " . $group->getName()
                                 . "<br>Jest to grupa prywatna, aby ją przeglądać musisz zostać zaakceptowany przez moderatora";
                     }
-                    Template::getInstance()->message = $message;
-                    Template::getInstance()->show("group/joinSuccess");
+                    Template::getInstance()->message = $error;
+                    Template::getInstance()->show("group/success");
                     return TRUE;
                 } else {
-                    $message = "Nie udało się dołączyć do grupy";
+                    $error = "Nie udało się dołączyć do grupy";
                 }
             } else {
-                $message = "Taka grupa nie istnieje";
+                $error = "Taka grupa nie istnieje";
             }
         } else {
-            $message = "Proszę się zalogować";
+            $error = "Proszę się zalogować";
         }
-        Template::getInstance()->message = $message;
-        Template::getInstance()->show("group/joinFail");
+        Template::getInstance()->error = $error;
+        Template::getInstance()->show("group/error");
         return FALSE;
     }
 
@@ -99,7 +99,8 @@ class groupController extends baseController {
             }
             if (empty($error)) {
                 if ($db->addGroup($group)) {
-                    Template::getInstance()->show("group/createSuccess");
+                    Template::getInstance()->message = "Grupa została założona";
+                    Template::getInstance()->show("group/success");
                 } else {
                     $error = "Z nieznanych powodów stworzenie grupy nie powiodło się";
                     Template::getInstance()->error = $error;
@@ -111,26 +112,63 @@ class groupController extends baseController {
             }
         }
     }
-    
-    public function show($id){
-        if(isset($_SESSION["login"])){
+
+    public function show($id) {
+        if (isset($_SESSION["login"])) {
             $user = Database::getInstance()->getUserBySessionLogin();
             $group = Database::getInstance()->getGroupById($id[0]);
-            $role = Database::getInstance()->getUserRoleInGroup($user, $group);
-            if($group!=FALSE && ($role=="moderator" || $role=="member")){
-                Template::getInstance()->group = $group;
-                Template::getInstance()->show("group/group"); 
-            }
-            else{
-                $error = "Nie masz dostępu do tej grupy lub grupa nie istnieje";
+            if ($group == FALSE) {
+                $error = "Grupa nie istnieje";
                 Template::getInstance()->error = $error;
-                Template::getInstance()->show("group/accessDenied");
+                Template::getInstance()->show("group/error");
+                return FALSE;
             }
-        }
-        else{
+            $role = Database::getInstance()->getUserRoleInGroup($user, $group);
+            if ($role == "moderator" || $role == "member") {
+                Template::getInstance()->group = $group;
+                Template::getInstance()->show("group/group");
+            } else {
+                $error = "Nie masz dostępu do tej grupy";
+                Template::getInstance()->error = $error;
+                Template::getInstance()->show("group/error");
+            }
+        } else {
             $error = "Proszę się zalogować";
             Template::getInstance()->error = $error;
-            Template::getInstance()->show("group/accessDenied");
+            Template::getInstance()->show("group/error");
+        }
+    }
+
+    public function members($groupId) {
+        if (isset($_SESSION["login"])) {
+            $groupId = $groupId[0];
+            $group = Database::getInstance()->getGroupById($groupId);
+            if ($group == FALSE) {
+                $error = "Nie znaleziono grupy";
+                Template::getInstance()->error = $error;
+                Template::getInstance()->show("group/error");
+                return FALSE;
+            }
+            if (!Database::getInstance()->isSessionUserMemberOfGroup($group)) {
+                $error = "Nie masz uprawnień do przeglądania członków tej grupy";
+                Template::getInstance()->error = $error;
+                Template::getInstance()->show("group/error");
+                return FALSE;
+            }
+            $array = Database::getInstance()->getMembersOfGroup($group);
+            if ($array == FALSE) {
+                $error = "Nie znaleziono członków w tej grupie";
+                Template::getInstance()->error = $error;
+                Template::getInstance()->show("group/error");
+                return FALSE;
+            }
+            Template::getInstance()->group = $group;
+            Template::getInstance()->users = $array;
+            Template::getInstance()->show("group/members");
+        } else {
+            $error = "Nie masz uprawnień do przeglądania członków tej grupy";
+            Template::getInstance()->error = $error;
+            Template::getInstance()->show("group/error");
         }
     }
 
