@@ -373,4 +373,27 @@ class Database {
                 
     }
     
+    /**
+     * Dodanie postu do bazy danych
+     * @param Posts $post
+     * @return boolean
+     */
+    public function addPost($post){
+        $query = $this->PDO->prepare("INSERT INTO POSTS (`USER`,`GROUP`,`MESSAGE`,`IMAGE`,`DATE`)" . 
+                "VALUES (:user,:group,:message,:image,:date)");
+        $query->bindValue(":user", $post->getUser());
+        $query->bindValue(":group", $post->getGroup());
+        $query->bindValue(":message", $post->getMessage());
+        $query->bindValue(":image", $post->getImage());
+        $query->bindValue(":date", $post->getDate());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if($affected_rows == 1){
+            return TRUE;
+        }
+        else{
+            return FALSE;
+        }
+    }
+    
 }
