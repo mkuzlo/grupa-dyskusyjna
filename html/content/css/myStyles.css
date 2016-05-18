@@ -52,3 +52,21 @@ a.sideLink:hover {
     padding-left: 50px;
     padding-right: 0px;
 }
+
+.post-head {
+    background-color: #353535;
+    color: #FFF;
+    font-weight: bold;
+
+}
+
+a.active-group {
+    color: white;
+}
+
+.my_icon {
+    width: 20px;
+    height: 20px;
+    background-color: #dbdbdb;
+    border-radius: 3px;
+}

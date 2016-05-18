@@ -1,13 +1,27 @@
 <!DOCTYPE html>
 <?php
-//rozpoczęcie sesji
 session_start();
-//zdefiniowanie stałych ze scieżką
-define('__SITE_PATH', realpath(dirname(__FILE__) . "/html"));
-//define('__SITE_PATH', "./html");
-define('APP_ROOT', 'grupa');
-define('IMAGE_ROOT', getcwd() . '/images/');
-//define('APP_ROOT', '.');
+//zdefiniowanie zdmiennej z nazwa servera na którem bedzie umieszczona aplikacja
+//aplikacja bedzie sprawdzać czy jest uruchomiona na tym serwerze czy lokalnie
+//i dobierać odpowiednie parametry zmiennych i ścieżek
+define('REMOTE_HOST', 'grupa.esy.es');
+if (REMOTE_HOST == $_SERVER['SERVER_NAME']) {
+    $local = FALSE;
+} else {
+    $local = TRUE;
+}
+define('IS_LOCAL', $local);
+if (IS_LOCAL) {
+    //zmienne dla aplikacji na localhost
+    define('__SITE_PATH', realpath(dirname(__FILE__) . "/html"));
+    define('APP_ROOT', 'grupa');
+    define('IMAGE_ROOT', getcwd() . '/images/');
+} else {
+    //zmiienne dla aplikacji na serwerze
+    define('__SITE_PATH', "./html");
+    define('APP_ROOT', '.');
+    define('IMAGE_ROOT', getcwd() . '/images/');
+}
 //dołączenie pliku z automatycznym ładowaniem klas
 include __SITE_PATH . '/includes/init.php';
 $router = new Router();
@@ -24,15 +38,15 @@ $router->setPath(__SITE_PATH . '/controller')
         <link rel="stylesheet" href="/<?= APP_ROOT ?>/html/content/css/myStyles.css" type="text/css" />   
         <!--Dołączenie skrytpu javascript biblioteki jquery -->
         <script src="/<?= APP_ROOT ?>/html/content/scripts/jquery-1.11.2.min.js"></script> 
-        <script type="text/javascript" src="/<?= APP_ROOT ?>/html/content/scripts/bootstrap-filestyle.min.js"> </script>
-        <script type="text/javascript" src="/<?= APP_ROOT ?>/html/content/scripts/myScript.js"> </script>
+        <script type="text/javascript" src="/<?= APP_ROOT ?>/html/content/scripts/bootstrap-filestyle.min.js"></script>
+        <script type="text/javascript" src="/<?= APP_ROOT ?>/html/content/scripts/myScript.js"></script>
     </head>
     <body>
-        <?php include 'html/includes/menu.php'; ?> 
+<?php include 'html/includes/menu.php'; ?> 
         <div class="container">
             <div class="row">
 
-                <?php $router->loader(); ?>
+<?php $router->loader(); ?>
 
             </div>
         </div>

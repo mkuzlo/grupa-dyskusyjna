@@ -126,6 +126,7 @@ class groupController extends baseController {
             $role = Database::getInstance()->getUserRoleInGroup($user, $group);
             if ($role == "moderator" || $role == "member") {
                 Template::getInstance()->group = $group;
+                Template::getInstance()->posts = Database::getInstance()->getPosts($group);
                 Template::getInstance()->show("group/group");
             } else {
                 $error = "Nie masz dostępu do tej grupy";

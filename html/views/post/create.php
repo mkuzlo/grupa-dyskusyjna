@@ -1,5 +1,5 @@
 <form method="POST" action="/<?= APP_ROOT ?>/post/add/<?= $group->getId() ?>" enctype="multipart/form-data"> 
-    <h3>Dodaj nowy post w grupie <?= $group->getName() ?> </h3>
+    <h3>Dodaj nowy post w grupie <?= htmlspecialchars($group->getName()) ?> </h3>
     Limit znaków: <span id="counter">0/2000</span><br>
     <div class="form-group">
         <label>Treść wiadomości:</label>

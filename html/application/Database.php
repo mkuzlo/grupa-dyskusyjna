@@ -9,13 +9,28 @@
 class Database {
 
     private static $instance = false;
-    private $username = "root";
-    private $password = "";
-    private $conf = "mysql:host=localhost;dbname=grupa;encoding=utf8;";
+    private $username;
+    private $password;
+    private $conf;
     private $PDO;
 
     private function __construct() {
-        $this->PDO = new PDO($this->conf, $this->username, $this->password);
+        if (IS_LOCAL) {
+            //zmienne bazy danych na localhost
+            $this->username = "root";
+            $this->password = "";
+            $this->conf = "mysql:host=localhost;dbname=grupa;encoding=utf8;";
+        } else {
+            //zmiienne bazy danych na serwerze
+            $this->username = "u137544908_admin";
+            $this->password = "EM6uxtpX";
+            $this->conf = "mysql:host=mysql.hostinger.pl;dbname=u137544908_grupa;encoding=utf8;";
+        }
+        try {
+            $this->PDO = new PDO($this->conf, $this->username, $this->password);
+        } catch (PDOException $e) {
+            echo 'Connection failed: ' . $e->getMessage();
+        }
     }
 
     /**
@@ -157,7 +172,7 @@ class Database {
         }
         return FALSE;
     }
-    
+
     /**
      * Zwraca grupe o podanym id lub FALSE gdy nie znaleziono
      * @param int $id
@@ -199,12 +214,12 @@ class Database {
         }
         return FALSE;
     }
-    
+
     /**
      * Zwraca tablicę grup do których należy zalogowany użytkownik
      * @return \Groups|boolean
      */
-    public function getUserGroups(){
+    public function getUserGroups() {
         $array = array();
         $user = $this->getUserBySessionLogin();
         $query = $this->PDO->prepare("SELECT * FROM USER_GROUPS WHERE `user`=:user AND (role='member' OR role='moderator')");
@@ -213,100 +228,97 @@ class Database {
         $affected_rows = $query->rowCount();
         if ($affected_rows >= 1) {
             $result = $query->fetch(PDO::FETCH_ASSOC);
-            while($result != FALSE){ 
+            while ($result != FALSE) {
                 $groupId = $result["group"];
                 $group = $this->getGroupById($groupId);
                 $array[] = $group;
-                $result = $query->fetch(PDO::FETCH_ASSOC); 
+                $result = $query->fetch(PDO::FETCH_ASSOC);
             }
             return $array;
         }
         return FALSE;
     }
-    
+
     /**
      * Sprawdza czy zalogowany użytkownik należy do podanej grupy
      * @param type Groups $group
      * @return boolean
      */
-    public function isSessionUserMemberOfGroup($group){
+    public function isSessionUserMemberOfGroup($group) {
         $query = $this->PDO->prepare("SELECT * FROM USER_GROUPS WHERE `USER` = :userId AND `GROUP` = :groupId");
         $query->bindValue(":userId", $this->getUserBySessionLogin()->getId());
         $query->bindValue(":groupId", $group->getId());
         $query->execute();
-         $affected_rows = $query->rowCount();
+        $affected_rows = $query->rowCount();
         if ($affected_rows == 1) {
             return TRUE;
-        }
-        else {
+        } else {
             return FALSE;
         }
     }
-    
+
     /**
      * Zwraca role użytkownika w danej grupie lub fałsz jeżeli do niej nie należy.
      * @param type $user
      * @param type $group
      * @return boolean
      */
-    public function getUserRoleInGroup($user, $group){
+    public function getUserRoleInGroup($user, $group) {
         $query = $this->PDO->prepare("SELECT * FROM USER_GROUPS WHERE `USER` = :userId AND `GROUP` = :groupId");
         $query->bindValue(":userId", $user->getId());
         $query->bindValue(":groupId", $group->getId());
         $query->execute();
-         $affected_rows = $query->rowCount();
+        $affected_rows = $query->rowCount();
         if ($affected_rows == 1) {
             return $query->fetch(PDO::FETCH_ASSOC)["role"];
-        }
-        else {
+        } else {
             return FALSE;
         }
     }
-    
+
     /**
      * Wyszukuje i zwraca tablicę grup odpowiadającą podanemu wzorowi.
      * @param type $pattern wzór do wyszukania
      * @param type $type name lub description
      * @return boolean/array of Groups
      */
-    public function getGroupsByPattern($pattern, $type){
+    public function getGroupsByPattern($pattern, $type) {
         $pattern2 = "%" . $pattern . "%";
-        if($type=="name"){
+        if ($type == "name") {
             $query = $this->PDO->prepare("SELECT * FROM GROUPS WHERE NAME LIKE :pattern");
         }
-        if($type=="description"){
+        if ($type == "description") {
             $query = $this->PDO->prepare("SELECT * FROM GROUPS WHERE DESCRIPTION LIKE :pattern");
         }
-        $query->bindValue(":pattern",$pattern2);
+        $query->bindValue(":pattern", $pattern2);
         $query->execute();
         $affected_rows = $query->rowCount();
         $array = array();
         if ($affected_rows >= 1) {
             $result = $query->fetch(PDO::FETCH_ASSOC);
-            while($result != FALSE){ 
-                $group = $this->getGroupById($result["id"]);                
+            while ($result != FALSE) {
+                $group = $this->getGroupById($result["id"]);
                 $array[] = $group;
-                $result = $query->fetch(PDO::FETCH_ASSOC); 
+                $result = $query->fetch(PDO::FETCH_ASSOC);
             }
             return $array;
         }
         return FALSE;
     }
-    
+
     /**
      * Dodaje użytkownika do grupy, w przypadku grupy prywatnej musi on zostać zaakceptowany
      * @param type $user
      * @param type $group
      * @return boolean
      */
-    public function addUserToGroup($user, $group){
+    public function addUserToGroup($user, $group) {
         $role = $this->getUserRoleInGroup($user, $group);
-        if($role == FALSE){
+        if ($role == FALSE) {
             $query = $this->PDO->prepare("INSERT INTO USER_GROUPS (`user`,`group`,`role`) VALUES (:user,:group,:role)");
-            if($group->getType()=="public"){
+            if ($group->getType() == "public") {
                 $role = "member";
-            }
-            else{
+            } else {
                 $role = "waiting";
             }
             $query->bindValue(":user", $user->getId());
@@ -314,24 +326,22 @@ class Database {
             $query->bindValue(":role", $role);
             $query->execute();
             $affected_rows = $query->rowCount();
-            if($affected_rows == 1){
+            if ($affected_rows == 1) {
                 return TRUE;
-            }
-            else {
+            } else {
                 return FALSE;
             }
-        }
-        else {
+        } else {
             return FALSE;
         }
     }
-    
+
     /**
      * Zwraca użytkownika o podanym ID lub FALSE gdy nie znaleziono
      * @param int $id
      * @return boolean|\Users
      */
-    public function getUserById($id){
+    public function getUserById($id) {
         $query = $this->PDO->prepare("SELECT * FROM USERS WHERE id=:id");
         $query->bindValue(":id", $id);
         $query->execute();
@@ -346,40 +356,38 @@ class Database {
         }
         return FALSE;
     }
-    
+
     /**
      * Zwraca tablicę użytkowników należących do podanej grupy lub FALSE
      * @param Groups $group
      * @return boolean|\array of Users
      */
-    public function getMembersOfGroup($group){
+    public function getMembersOfGroup($group) {
         $query = $this->PDO->prepare("SELECT * FROM USER_GROUPS WHERE `GROUP` = :group AND (`role` = 'member' OR `role` = 'moderator')");
         $query->bindValue(":group", $group->getId());
         $query->execute();
         $affected_rows = $query->rowCount();
         $array = array();
-        if($affected_rows >= 1){
+        if ($affected_rows >= 1) {
             $result = $query->fetch(PDO::FETCH_ASSOC);
-            while($result != FALSE){ 
-                $user = $this->getUserById($result["user"]);              
+            while ($result != FALSE) {
+                $user = $this->getUserById($result["user"]);
                 $array[] = $user;
-                $result = $query->fetch(PDO::FETCH_ASSOC); 
+                $result = $query->fetch(PDO::FETCH_ASSOC);
             }
             return $array;
-        }
-        else{
+        } else {
             return FALSE;
         }
-                
     }
-    
+
     /**
      * Dodanie postu do bazy danych
      * @param Posts $post
      * @return boolean
      */
-    public function addPost($post){
-        $query = $this->PDO->prepare("INSERT INTO POSTS (`USER`,`GROUP`,`MESSAGE`,`IMAGE`,`DATE`)" . 
+    public function addPost($post) {
+        $query = $this->PDO->prepare("INSERT INTO POSTS (`USER`,`GROUP`,`MESSAGE`,`IMAGE`,`DATE`)" .
                 "VALUES (:user,:group,:message,:image,:date)");
         $query->bindValue(":user", $post->getUser());
         $query->bindValue(":group", $post->getGroup());
@@ -388,12 +396,105 @@ class Database {
         $query->bindValue(":date", $post->getDate());
         $query->execute();
         $affected_rows = $query->rowCount();
-        if($affected_rows == 1){
+        if ($affected_rows == 1) {
             return TRUE;
+        } else {
+            return FALSE;
         }
-        else{
+    }
+
+    /**
+     * Zwraca tablicę zmiennych typu Posts należących do podanej grupy
+     * @param Groups $group
+     * @return boolean|\Posts
+     */
+    public function getPosts($group) {
+        $query = $this->PDO->prepare("SELECT * FROM POSTS WHERE `GROUP` = :group ORDER BY `date` DESC");
+        $query->bindValue(":group", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows >= 1) {
+            $array = array();
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            while ($result != FALSE) {
+                $post = new Posts();
+                $post->setId($result['id']);
+                $post->setDate($result['date']);
+                $post->setGroup($result['group']);
+                $post->setImage($result['image']);
+                $post->setMessage($result['message']);
+                $post->setUser($result['user']);
+                $array[] = $post;
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+            }
+            return $array;
+        } else {
+            return FALSE;
+        }
+    }
+
+    /**
+     * Zwraca post o podanym id
+     * @param type $id
+     * @return boolean|\Posts
+     */
+    public function getPostById($id) {
+        $query = $this->PDO->prepare("SELECT * FROM POSTS WHERE `ID` = :id");
+        $query->bindValue(":id", $id);
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            $post = new Posts();
+            $post->setId($result['id']);
+            $post->setDate($result['date']);
+            $post->setGroup($result['group']);
+            $post->setImage($result['image']);
+            $post->setMessage($result['message']);
+            $post->setUser($result['user']);
+            return $post;
+        } else {
             return FALSE;
         }
     }
     
+    /**
+     * Usuwa podany post z bazy danych
+     * @param type $post
+     * @return boolean
+     */
+    public function deletePost($post){
+        $query = $this->PDO->prepare("DELETE FROM POSTS WHERE `ID` = :id");
+        $query->bindValue(":id", $post->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {            
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    /**
+     * Zmienia wiadomość w poscie na podaną
+     * @param type $post
+     * @param type $message
+     * @return boolean
+     */
+    public function updatePostMessage($post, $message){
+        if($post->getMessage() == $message){
+            return TRUE;
+        }
+        $query = $this->PDO->prepare("UPDATE POSTS SET `MESSAGE` = :message WHERE `ID` = :id");
+        $query->bindValue(":id", $post->getId());
+        $query->bindValue(":message", $message);
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {            
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
 }

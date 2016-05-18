@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-md-6">
         <div class="alert alert-info" role="alert" style="margin-top: 20px">
-            Ilość członków grupy <?= $group->getName() ?>: <?= count($users) ?>
+            Ilość członków grupy <?= htmlspecialchars($group->getName()) ?>: <?= count($users) ?>
         </div>
         <table class="table">
             <thead>

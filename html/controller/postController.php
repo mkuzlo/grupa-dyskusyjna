@@ -42,6 +42,75 @@ class postController extends baseController {
         }
     }
 
+    public function delete($postId) {
+        $error = "";
+        if (isset($_SESSION["login"])) {
+            $user = Database::getInstance()->getUserBySessionLogin();
+            $post = Database::getInstance()->getPostById($postId[0]);
+            if ($post == FALSE) {
+                $error = "Post nie istnieje";
+            } else {
+                $role = Database::getInstance()->getUserRoleInGroup($user, Database::getInstance()->getGroupById($post->getGroup()));
+            }
+
+            if (empty($error) && ($role == 'moderator' || $post->getUser() == $user->getId())) {
+                if (Database::getInstance()->deletePost($post)) {
+                    if (!empty($post->getImage())) {
+                        unlink(IMAGE_ROOT . $post->getImage());
+                    }
+                } else {
+                    $error = "Nie udało się usunąć postu";
+                }
+            } else {
+                $error = "Nie masz uprawnień do usunięcia tego postu";
+            }
+        } else {
+            $error = "Użytkownik niezalogowany";
+        }
+        if (empty($error)) {
+            Template::getInstance()->group = Database::getInstance()->getGroupById($post->getGroup());
+            Template::getInstance()->message = "Post został usunięty";
+            Template::getInstance()->show("group/success");
+        } else {
+            Template::getInstance()->group = Database::getInstance()->getGroupById($post->getGroup());
+            Template::getInstance()->error = $error;
+            Template::getInstance()->show("group/error");
+        }
+    }
+
+    public function edit($postId) {
+        $error = "";
+        if (isset($_SESSION["login"])) {
+            $user = Database::getInstance()->getUserBySessionLogin();
+            $post = Database::getInstance()->getPostById($postId[0]);
+            if ($post == FALSE) {
+                $error = "Post nie istnieje";
+            }
+            if (!(empty($error) && ($post->getUser() == $user->getId()))) {
+                $error = "Nie masz uprawnień do edytowania tego postu";
+            }
+        } else {
+            $error = "Użytkownik niezalogowany";
+        }
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && empty($error)) {
+            $message = $_POST['message'];
+            if (Database::getInstance()->updatePostMessage($post, $message)) {
+                $location = APP_ROOT . "/group/show/" . $post->getGroup();
+                header("Location: /$location");
+            } else {
+                $error = "Edycja wiadomości nie powiodła się";
+            }
+        } elseif (empty($error)) {
+            Template::getInstance()->group = Database::getInstance()->getGroupById($post->getGroup());
+            Template::getInstance()->post = $post;
+            Template::getInstance()->show("post/edit");
+        } else {
+            Template::getInstance()->group = Database::getInstance()->getGroupById($post->getGroup());
+            Template::getInstance()->error = $error;
+            Template::getInstance()->show("group/error");
+        }
+    }
+
     public function add($groupId) {
         if (isset($_SESSION["login"])) {
             $groupId = $groupId[0];
@@ -59,7 +128,7 @@ class postController extends baseController {
                 return FALSE;
             }
             Template::getInstance()->group = $group;
-            $message = trim($_POST['message']);
+            $message = $_POST['message'];
             if (strlen($message) > 2000) {
                 Template::getInstance()->error = "Wiadomość zbyt długa";
                 Template::getInstance()->show("group/error");
@@ -114,7 +183,8 @@ class postController extends baseController {
                 $result = Database::getInstance()->addPost($post);
             }
             if ($result == TRUE) {
-                Template::getInstance()->show("group/group");
+                $location = APP_ROOT . "/group/show/" . $group->getId();
+                header("Location: /$location");
             } else {
                 $error = "Nie udało się dodać postu";
                 Template::getInstance()->error = $error;

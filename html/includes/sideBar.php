@@ -10,7 +10,6 @@
                     <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/show/<?= $group->getId() ?>">Wyświetl grupę</a></li>
                     <li><a class="sideLink" href="/<?= APP_ROOT ?>/post/create/<?= $group->getId() ?>">Dodaj post</a></li>
                     <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/members/<?= $group->getId() ?>">Wyświetl członków</a></li>
-                    <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/edit/<?= $group->getId() ?>">Zarządzaj</a></li>
                 <?php } ?>
             </ul>
             <div class="line-separator"></div>
@@ -18,16 +17,26 @@
 
                 <?php
                 $myGroups = Database::getInstance()->getUserGroups();
+                if (isset($group)) {
+                    $chosen = $group->getId();
+                } else {
+                    $chosen = -1;
+                }
                 if ($myGroups != FALSE) {
                     foreach ($myGroups as $myGroup) {
                         $id = $myGroup->getId();
                         $name = $myGroup->getName();
-                        ?>
-                        <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/show/<?= $id ?>"><?= $name ?></a></li>
-                            <?php
+                        if ($id == $chosen) {
+                            $class = "active-group";
+                        } else {
+                            $class = "";
                         }
+                        ?>
+                <li><a class="sideLink <?= $class ?>" href="/<?= APP_ROOT ?>/group/show/<?= $id ?>"><?= htmlspecialchars($name) ?></a></li>
+                        <?php
                     }
-                    ?>
+                }
+                ?>
             </ul>
         </div>
     </div>

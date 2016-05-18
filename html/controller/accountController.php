@@ -50,9 +50,6 @@ class accountController extends baseController {
             $user->setLogin($login);
             $user->setPassword($password);
             $error = "";
-            if(strlen($user->getLogin())>=30){
-                $error = "Login jest zbyt długi";
-            }
             if(strlen($user->getPassword())>=40){
                 $error = "Hasło jest zbyt długie";
             }
@@ -61,6 +58,10 @@ class accountController extends baseController {
             }
             if (!($password == $password2)) {
                 $error = "Hasła nie są identyczne";
+            }
+            if ( !preg_match('/^[A-Za-z][A-Za-z0-9]{3,30}$/', $login) ){
+                $error = "Niepopoprawny login<br>-Dozwolona długość 4-29 znaków<br>"
+                        . "-Tylko litery i cyfry<br>-Musi zaczynać się od litery<br>";
             }
             if ($db->isUserExist($user)) {
                 $error = "Użytkownik o takim loginie już istnieje";

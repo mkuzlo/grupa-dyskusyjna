@@ -43,7 +43,7 @@ if (isset($number) ) {
                     foreach ($array as $group) {
                         ?>   
                         <tr>
-                            <td><?= $group->getName() ?></td>
+                            <td><?= htmlspecialchars($group->getName()) ?></td>
                             <td><?php
                                 if ($group->getType() == "public") {
                                     echo "<font color='green'>publiczna</span>";
@@ -51,7 +51,7 @@ if (isset($number) ) {
                                     echo "<font color='red'>prywatna</span>";
                                 }
                                 ?></td>
-                            <td><?= $group->getDescription() ?></td>
+                            <td><?= htmlspecialchars($group->getDescription()) ?></td>
                             <td>
                                 <?php if (!Database::getInstance()->isSessionUserMemberOfGroup($group)) { ?>
                                     <a class="btn btn-success" href="/<?= APP_ROOT ?>/group/join/<?= $group->getId() ?>">Dołącz</a>
