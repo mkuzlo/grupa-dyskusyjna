@@ -183,6 +183,7 @@ class postController extends baseController {
                 $result = Database::getInstance()->addPost($post);
             }
             if ($result == TRUE) {
+                $this->removeOldPosts($group);
                 $location = APP_ROOT . "/group/show/" . $group->getId();
                 header("Location: /$location");
             } else {
@@ -196,5 +197,22 @@ class postController extends baseController {
             Template::getInstance()->show("group/error");
         }
     }
-
+    
+    private function removeOldPosts($group){
+        $posts = Database::getInstance()->getPosts($group);
+        $postLimit = 50;
+        $postNumber = count($posts);
+        if($postNumber>=$postLimit){
+            $i=$postLimit-1;
+            while($i<$postNumber-1){
+                $image = $posts[$i]->getImage();
+                if(!empty($image)){
+                    unlink(IMAGE_ROOT . $image);                    
+                }
+                Database::getInstance()->deletePost($posts[$i]);
+                $i++;
+            }
+            
+        }
+    }
 }
