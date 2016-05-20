@@ -380,6 +380,30 @@ class Database {
             return FALSE;
         }
     }
+    
+    /**
+     * Zwraca tablicę użytkowników oczekujących na przyjęcie do podanej grupy lub FALSE
+     * @param type $group
+     * @return boolean
+     */
+    public function getWaitingOfGroup($group) {
+        $query = $this->PDO->prepare("SELECT * FROM USER_GROUPS WHERE `GROUP` = :group AND `role` = 'waiting'");
+        $query->bindValue(":group", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        $array = array();
+        if ($affected_rows >= 1) {
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            while ($result != FALSE) {
+                $user = $this->getUserById($result["user"]);
+                $array[] = $user;
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+            }
+            return $array;
+        } else {
+            return FALSE;
+        }
+    }
 
     /**
      * Dodanie postu do bazy danych
@@ -496,5 +520,102 @@ class Database {
             return FALSE;
         }
     }
-
+    
+    /**
+     * Usuwa użytkownika z grupy
+     * @param type $user
+     * @param type $group
+     * @return boolean
+     */
+    public function deleteUserFromGroup($user, $group){
+        $query = $this->PDO->prepare("DELETE FROM USER_GROUPS WHERE `USER` = :userId AND `GROUP` = :groupId");
+        $query->bindValue(":userId", $user->getId());
+        $query->bindValue(":groupId", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {            
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    /**
+     * Akceptuje użytkownika jako członka grupy
+     * @param type $user
+     * @param type $group
+     * @return boolean
+     */
+    public function updateUserToMember($user, $group){       
+        $query = $this->PDO->prepare("UPDATE USER_GROUPS SET `ROLE` = 'member' WHERE `USER` = :userId AND `GROUP` = :groupId");
+        $query->bindValue(":userId", $user->getId());
+        $query->bindValue(":groupId", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {            
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    /**
+     * Aktualizuje opis i typ grupy
+     * @param type $group
+     * @return boolean
+     */
+    public function updateGroup($group){       
+        $query = $this->PDO->prepare("UPDATE GROUPS SET `DESCRIPTION` = :description, `TYPE` = :type WHERE `ID` = :id");
+        $query->bindValue(":id", $group->getId());
+        $query->bindValue(":description", $group->getDescription());
+        $query->bindValue(":type", $group->getType());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {            
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    /**
+     * Zwraca tablicę nazw obrazów które zostały umieszczone w grupie
+     * @param type $group
+     * @return boolean
+     */
+    public function getGroupImagesArray($group){
+        $query = $this->PDO->prepare("SELECT * FROM POSTS WHERE `GROUP` = :group");
+        $query->bindValue(":group", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows >= 1) {
+            $array = array();
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            while ($result != FALSE) {               
+                $array[] = $result['image'];
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+            }
+            return $array;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    public function deleteGroup($group){
+        $query = $this->PDO->prepare("DELETE FROM USER_GROUPS WHERE `GROUP` = :groupId");
+        $query->bindValue(":groupId", $group->getId());
+        $query->execute();
+        $query = $this->PDO->prepare("DELETE FROM POSTS WHERE `GROUP` = :groupId");
+        $query->bindValue(":groupId", $group->getId());
+        $query->execute();
+        $query = $this->PDO->prepare("DELETE FROM GROUPS WHERE `ID` = :groupId");
+        $query->bindValue(":groupId", $group->getId());
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows == 1) {            
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
 }

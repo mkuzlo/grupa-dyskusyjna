@@ -10,6 +10,9 @@
                     <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/show/<?= $group->getId() ?>">Wyświetl grupę</a></li>
                     <li><a class="sideLink" href="/<?= APP_ROOT ?>/post/create/<?= $group->getId() ?>">Dodaj post</a></li>
                     <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/members/<?= $group->getId() ?>">Wyświetl członków</a></li>
+                    <?php if('moderator' == Database::getInstance()->getUserRoleInGroup(Database::getInstance()->getUserBySessionLogin(), $group)){    ?>
+                    <li><a class="sideLink" href="/<?= APP_ROOT ?>/group/manage/<?= $group->getId() ?>">Zarządzaj</a></li>
+                    <?php } ?>
                 <?php } ?>
             </ul>
             <div class="line-separator"></div>

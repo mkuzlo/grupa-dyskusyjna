@@ -29,5 +29,16 @@
                 <?php } ?>
             </tbody>
         </table>
+        <?php
+        $role = Database::getInstance()->getUserRoleInGroup($user, $group);
+        if ($role == 'member') {
+            ?>
+            <div>
+                <a href="/<?= APP_ROOT ?>/group/leave/<?= $group->getId() ?>" ><button id="button" class="btn btn-lg btn-default ">Opuść grupę</button> </a>
+            </div>
+            <?php
+        }
+        ?>
+
     </div>
 </div>
