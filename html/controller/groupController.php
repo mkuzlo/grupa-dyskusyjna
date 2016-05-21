@@ -32,6 +32,17 @@ class groupController extends baseController {
                     Template::getInstance()->number = 0;
                     Template::getInstance()->array = array();
                 }
+            }else{
+                $type = "name";
+                $pattern = "";
+                $array = Database::getInstance()->getGroupsByPattern($pattern, $type);
+                if ($array != FALSE) {
+                    Template::getInstance()->array = $array;
+                    Template::getInstance()->number = count($array);
+                } else {
+                    Template::getInstance()->number = 0;
+                    Template::getInstance()->array = array();
+                }
             }
             Template::getInstance()->show("group/find");
         } else {

@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <?php
 session_start();
 //zdefiniowanie zdmiennej z nazwa servera na którem bedzie umieszczona aplikacja
@@ -24,9 +23,17 @@ if (IS_LOCAL) {
 }
 //dołączenie pliku z automatycznym ładowaniem klas
 include __SITE_PATH . '/includes/init.php';
+//Sprawdzane jest czy otrzymane zapytanie jest wywolane przez ajax
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['ajax'])) {        
+        include __SITE_PATH . '/ajax/newPost.php';
+        return;        
+    }
+}
 $router = new Router();
 $router->setPath(__SITE_PATH . '/controller')
 ?>
+<!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
@@ -42,11 +49,11 @@ $router->setPath(__SITE_PATH . '/controller')
         <script type="text/javascript" src="/<?= APP_ROOT ?>/html/content/scripts/myScript.js"></script>
     </head>
     <body>
-<?php include 'html/includes/menu.php'; ?> 
+        <?php include 'html/includes/menu.php'; ?> 
         <div class="container">
             <div class="row">
 
-<?php $router->loader(); ?>
+                <?php $router->loader(); ?>
 
             </div>
         </div>

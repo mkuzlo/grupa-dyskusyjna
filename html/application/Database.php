@@ -601,6 +601,11 @@ class Database {
         }
     }
     
+    /**
+     * Usuwa grupę
+     * @param type $group
+     * @return boolean
+     */
     public function deleteGroup($group){
         $query = $this->PDO->prepare("DELETE FROM USER_GROUPS WHERE `GROUP` = :groupId");
         $query->bindValue(":groupId", $group->getId());
@@ -614,6 +619,38 @@ class Database {
         $affected_rows = $query->rowCount();
         if ($affected_rows == 1) {            
             return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    /**
+     * Zwraca tablice postów dodanych w przeciagu ostatnich sekund.
+     * @param type $group
+     * @param type $seconds
+     * @return boolean|\Posts
+     */
+    public function getNewPosts($group, $seconds){
+        $query = $this->PDO->prepare("SELECT * FROM POSTS WHERE `GROUP` = :group AND TIMESTAMPDIFF(SECOND,`DATE`,NOW()) < :time ORDER BY `date` DESC");
+        $query->bindValue(":group", $group->getId());
+        $query->bindValue(":time", $seconds);
+        $query->execute();
+        $affected_rows = $query->rowCount();
+        if ($affected_rows >= 1) {
+            $array = array();
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            while ($result != FALSE) {
+                $post = new Posts();
+                $post->setId($result['id']);
+                $post->setDate($result['date']);
+                $post->setGroup($result['group']);
+                $post->setImage($result['image']);
+                $post->setMessage($result['message']);
+                $post->setUser($result['user']);
+                $array[] = $post;
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+            }
+            return $array;
         } else {
             return FALSE;
         }
